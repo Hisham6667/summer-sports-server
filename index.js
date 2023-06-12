@@ -17,9 +17,9 @@ const verifyJWT = (req, res, next) => {
   }
   // bearer token
   const token = authorization.split(' ')[1];
-  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (error, decoded)=> {
-    if(error){
-      return res.status(401).send({error: true, message: 'unauthorized user'})
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (error, decoded) => {
+    if (error) {
+      return res.status(401).send({ error: true, message: 'unauthorized user' })
     }
     req.decoded = decoded;
     next();
@@ -71,9 +71,22 @@ async function run() {
     })
 
     // selected classes operation api
-    app.post('/selectedclasses', async(req, res) => {
+    app.post('/selectedclasses', async (req, res) => {
       const selectedClass = req.body;
       const result = await selectedClassCollection.insertOne(selectedClass);
+      res.send(result)
+    })
+    app.get('/selectedclasses', verifyJWT, async (req, res) => {
+      const Email = req.body.email;
+      if (!Email) {
+        res.send([])
+      }
+      const decodedEmail = req.decoded.email;
+      if (Email !== decodedEmail) {
+        return res.status(403).send({ error: true, message: 'forbidden access' })
+      }
+      const query = { email: Email };
+      const result = await selectedClassCollection.find(query).toArray()
       res.send(result)
     })
 
