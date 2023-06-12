@@ -53,6 +53,17 @@ async function run() {
     const paymentCollection = client.db("summerSportsDB").collection("payments")
     const userCollection = client.db("summerSportsDB").collection("users")
 
+    // verifyadmin
+    const verifyAdmin = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email }
+      const user = await userCollection.findOne(query)
+      if (user?.role !== 'admin') {
+        return res.status(403).send({ error: true, message: 'forbidden access' })
+      }
+      next();
+    }
+
     // users operation apis
     app.post('/users', async (req, res) => {
       const user = req.body;
@@ -64,7 +75,7 @@ async function run() {
       const result = await userCollection.insertOne(user);
       res.send(result)
     })
-    app.get('/users', async (req, res) => {
+    app.get('/users', verifyJWT, verifyAdmin, async (req, res) => {
       const result = await userCollection.find().toArray();
       res.send(result);
     })
@@ -78,11 +89,21 @@ async function run() {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) }
       const updateDoc = {
-        $set:{
-          role:"admin"
+        $set: {
+          role: "admin"
         }
       }
       const result = await userCollection.updateOne(filter, updateDoc)
+      res.send(result)
+    })
+    app.get('/users/admin/:email', verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      if (req.decoded.email !== email) {
+        res.send({ admin: false })
+      }
+      const query = { email: email }
+      const user = await userCollection.findOne(query)
+      const result = { admin: user?.role === 'admin' }
       res.send(result)
     })
 
