@@ -117,6 +117,19 @@ async function run() {
       const deleteResult = await selectedClassCollection.deleteMany(query)
       res.send({ insertResult, deleteResult })
     })
+    app.get('/payments', verifyJWT, async (req, res) => {
+      const Email = req.query.email;
+      if (!Email) {
+        res.send([])
+      }
+      const decodedEmail = req.decoded.email;
+      if (Email !== decodedEmail) {
+        return res.status(403).send({ error: true, message: 'forbidden access' })
+      }
+      const query = { email: Email };
+      const result = await paymentCollection.find(query).toArray()
+      res.send(result)
+    })
 
 
 
