@@ -51,6 +51,19 @@ async function run() {
     const classCollection = client.db("summerSportsDB").collection("allClasses")
     const selectedClassCollection = client.db("summerSportsDB").collection("selectedClasses")
     const paymentCollection = client.db("summerSportsDB").collection("payments")
+    const userCollection = client.db("summerSportsDB").collection("users")
+
+    // users operation apis
+    app.post('/users', async (req, res) => {
+      const user = req.body;
+      const query = { email: user.email }
+      const existUser = await userCollection.findOne(query)
+      if (existUser) {
+        return
+      }
+      const result = await userCollection.insertOne(user);
+      res.send(result)
+    })
 
     // jwt token api
     app.post('/jwt', (req, res) => {
@@ -130,6 +143,7 @@ async function run() {
       const result = await paymentCollection.find(query).toArray()
       res.send(result)
     })
+
 
 
 
